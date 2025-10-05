@@ -1,6 +1,8 @@
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+
+// تسجيل مستخدم جديد
 const register = async (req, res) => {
   const { name, email, password, role, age, gender } = req.body;
   try {
@@ -9,20 +11,48 @@ const register = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // ✅ الحالة الافتراضية حسب الدور
+    let status = 'pending';
+    if (role === 'patient') {
+      status = 'approved'; // المريض مباشرةً موافق عليه
+    }
+
     const user = await User.create({
-      name, email, password_hash: hashedPassword, role, age, gender
+      name,
+      email,
+      password_hash: hashedPassword,
+      role,
+      age,
+      gender,
+      status // ✅ إدخال الحالة
     });
 
-    res.status(201).json({ message: "User registered successfully", user_id: user.user_id });
+    res.status(201).json({
+      message: `User registered successfully as ${role}`,
+      user_id: user.user_id,
+      status: user.status
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
+
+
+
+// تسجيل الدخول
 const login = async (req, res) => {
   const { email, password } = req.body;
   try {
     const user = await User.findOne({ where: { email } });
     if (!user) return res.status(404).json({ message: "User not found" });
+
+    // التحقق من حالة الحساب
+    if (user.role !== 'patient') {
+      if (user.status === 'pending')
+        return res.status(403).json({ message: "Account is pending admin approval" });
+      if (user.status === 'rejected')
+        return res.status(403).json({ message: "Account has been rejected" });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password_hash);
     if (!isMatch) return res.status(400).json({ message: "Invalid password" });
@@ -39,6 +69,7 @@ const login = async (req, res) => {
   }
 };
 
+// نسيان كلمة المرور
 const forgotPassword = async (req, res) => {
   const { email } = req.body;
   try {
@@ -64,6 +95,7 @@ const forgotPassword = async (req, res) => {
   }
 };
 
+// إعادة تعيين كلمة المرور
 const resetPassword = async (req, res) => {
   const { token, newPassword } = req.body;
   if (!token || !newPassword) return res.status(400).json({ message: "Token and newPassword required" });
@@ -90,10 +122,11 @@ const resetPassword = async (req, res) => {
   }
 };
 
+// جلب كل المستخدمين
 const getAllUsers = async (req, res) => {
   try {
     const users = await User.findAll({
-      attributes: ['user_id', 'name', 'email', 'role', 'age', 'gender', 'picture']
+      attributes: ['user_id', 'name', 'email', 'role', 'age', 'gender', 'picture', 'status']
     });
     res.json(users);
   } catch (err) {
@@ -101,12 +134,13 @@ const getAllUsers = async (req, res) => {
   }
 };
 
+// جلب مستخدم عبر الإيميل
 const getUserByEmail = async (req, res) => {
   const { email } = req.params;
   try {
     const user = await User.findOne({
       where: { email },
-      attributes: ['user_id', 'name', 'email', 'role', 'age', 'gender', 'picture']
+      attributes: ['user_id', 'name', 'email', 'role', 'age', 'gender', 'picture', 'status']
     });
     if (!user) return res.status(404).json({ message: "User not found" });
     res.json(user);
@@ -115,6 +149,7 @@ const getUserByEmail = async (req, res) => {
   }
 };
 
+// حذف مستخدم
 const deleteUser = async (req, res) => {
   const { id } = req.params;
   try {
@@ -126,6 +161,7 @@ const deleteUser = async (req, res) => {
   }
 };
 
+// تحديث معلومات مستخدم
 const updateUser = async (req, res) => {
   const requester = req.user;
   let user;
@@ -139,7 +175,7 @@ const updateUser = async (req, res) => {
       if (!user) return res.status(404).json({ message: "User not found" });
     }
 
-    const { name, age, gender, picture, role, verified, email } = req.body;
+    const { name, age, gender, picture, role, verified, email, status } = req.body;
 
     if (name) user.name = name;
     if (age) user.age = age;
@@ -149,6 +185,7 @@ const updateUser = async (req, res) => {
     if (requester.role === 'admin') {
       if (role) user.role = role;
       if (verified !== undefined) user.verified = verified;
+      if (status) user.status = status;
     }
 
     if (email) {

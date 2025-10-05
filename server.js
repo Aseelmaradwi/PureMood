@@ -1,10 +1,8 @@
-// server.js
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const sequelize = require('./config/db');
 
-// Load environment variables
 dotenv.config();
 
 const app = express();
@@ -15,13 +13,13 @@ app.use(express.json());
 const userRoutes = require('./routes/userRoutes');
 app.use('/api/users', userRoutes);
 
-// Connect to Database and sync models
+// Connect to Database
 const startServer = async () => {
   try {
     await sequelize.authenticate();
     console.log('✅ Database connected');
 
-    await sequelize.sync({ alter: true }); // إنشاء الجداول تلقائيًا إذا غير موجودة
+    await sequelize.sync({ alter: true });
     console.log('✅ All models synced with DB');
 
     const PORT = process.env.PORT || 5000;
