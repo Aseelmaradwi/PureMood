@@ -14,19 +14,14 @@ const {
   updateUser 
 } = require('../controllers/userController');
 
-// تسجيل مستخدم جديد
 router.post('/register', register);
 
-// تسجيل الدخول
 router.post('/login', login);
 
-// نسيان كلمة المرور
 router.post('/forgot-password', forgotPassword);
 
-// إعادة تعيين كلمة المرور
 router.post('/reset-password', resetPassword);
 
-// جلب بيانات المستخدم نفسه (لكل مستخدم)
 router.get('/me', verifyToken, async (req, res) => {
   try {
     const user = await User.findByPk(req.user.user_id, {
@@ -41,22 +36,16 @@ router.get('/me', verifyToken, async (req, res) => {
   }
 });
 
-// الحصول على جميع المستخدمين (أدمن فقط)
 router.get('/', verifyToken, checkAdmin, getAllUsers);
 
-// الحصول على مستخدم حسب البريد الإلكتروني (أدمن فقط)
 router.get('/:email', verifyToken, checkAdmin, getUserByEmail);
 
-// حذف مستخدم (أدمن فقط)
 router.delete('/:id', verifyToken, checkAdmin, deleteUser);
 
-// تحديث بيانات المستخدم نفسه
 router.put('/me', verifyToken, updateUser);
 
-// تحديث بيانات مستخدم آخر (أدمن فقط)
 router.put('/:id', verifyToken, checkAdmin, updateUser);
 
-// تحديث حالة المستخدم (approve / reject) — للأدمن المفعّل فقط
 router.put('/:id/status', verifyToken, checkAdmin, async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
