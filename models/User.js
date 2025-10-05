@@ -10,7 +10,11 @@ const User = sequelize.define('User', {
   age: { type: DataTypes.INTEGER, allowNull: true },
   gender: { type: DataTypes.ENUM('male','female'), allowNull: true },
   verified: { type: DataTypes.BOOLEAN, defaultValue: false },
-  picture: { type: DataTypes.STRING, allowNull: true }, 
+  picture: { type: DataTypes.STRING, allowNull: true },
+  status: {
+  type: DataTypes.ENUM('pending', 'approved', 'rejected'),
+  defaultValue: 'pending',
+},
   created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW }
 }, { tableName: 'users', timestamps: false });
 
