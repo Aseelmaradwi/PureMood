@@ -2,7 +2,6 @@ const User = require('../models/User');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
-// تسجيل مستخدم جديد
 const register = async (req, res) => {
   const { name, email, password, role, age, gender } = req.body;
   try {
@@ -11,10 +10,9 @@ const register = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // ✅ الحالة الافتراضية حسب الدور
     let status = 'pending';
     if (role === 'patient') {
-      status = 'approved'; // المريض مباشرةً موافق عليه
+      status = 'approved';
     }
 
     const user = await User.create({
@@ -24,7 +22,7 @@ const register = async (req, res) => {
       role,
       age,
       gender,
-      status // ✅ إدخال الحالة
+      status
     });
 
     res.status(201).json({
@@ -39,14 +37,12 @@ const register = async (req, res) => {
 
 
 
-// تسجيل الدخول
 const login = async (req, res) => {
   const { email, password } = req.body;
   try {
     const user = await User.findOne({ where: { email } });
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    // التحقق من حالة الحساب
     if (user.role !== 'patient') {
       if (user.status === 'pending')
         return res.status(403).json({ message: "Account is pending admin approval" });
@@ -69,7 +65,6 @@ const login = async (req, res) => {
   }
 };
 
-// نسيان كلمة المرور
 const forgotPassword = async (req, res) => {
   const { email } = req.body;
   try {
@@ -95,7 +90,6 @@ const forgotPassword = async (req, res) => {
   }
 };
 
-// إعادة تعيين كلمة المرور
 const resetPassword = async (req, res) => {
   const { token, newPassword } = req.body;
   if (!token || !newPassword) return res.status(400).json({ message: "Token and newPassword required" });
@@ -122,7 +116,6 @@ const resetPassword = async (req, res) => {
   }
 };
 
-// جلب كل المستخدمين
 const getAllUsers = async (req, res) => {
   try {
     const users = await User.findAll({
@@ -134,7 +127,6 @@ const getAllUsers = async (req, res) => {
   }
 };
 
-// جلب مستخدم عبر الإيميل
 const getUserByEmail = async (req, res) => {
   const { email } = req.params;
   try {
@@ -149,7 +141,6 @@ const getUserByEmail = async (req, res) => {
   }
 };
 
-// حذف مستخدم
 const deleteUser = async (req, res) => {
   const { id } = req.params;
   try {
@@ -161,7 +152,6 @@ const deleteUser = async (req, res) => {
   }
 };
 
-// تحديث معلومات مستخدم
 const updateUser = async (req, res) => {
   const requester = req.user;
   let user;
