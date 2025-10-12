@@ -3,19 +3,19 @@ const MoodEntry = require('../models/MoodEntry');
 // 🟢 إنشاء إدخال جديد (تسجيل مزاج)
 exports.createMoodEntry = async (req, res) => {
   try {
-    const { user_id, mood_emoji, note_text, note_audio } = req.body;
+    const { mood_emoji, note_text, note_audio } = req.body;
 
-    if (!user_id || !mood_emoji) {
-      return res.status(400).json({ message: "User ID and mood emoji are required." });
+    if (!mood_emoji) {
+      return res.status(400).json({ message: "Mood emoji is required." });
     }
 
     const newEntry = await MoodEntry.create({
-      user_id,
+      user_id: req.user.user_id, // ناخد اليوزر من التوكن
       mood_emoji,
       note_text,
       note_audio
     });
-//lkwjdikjdkfckdhfjkhdfdhghgjgjcgdfygejfgej
+
     res.status(201).json({
       message: "Mood entry created successfully 🌿",
       entry: newEntry
@@ -26,7 +26,7 @@ exports.createMoodEntry = async (req, res) => {
   }
 };
 
-// 🟡 جلب كل المزاجات لمستخدم
+// 🟡 جلب كل الحالات المزاجية لمستخدم
 exports.getMoodEntriesByUser = async (req, res) => {
   try {
     const { user_id } = req.params;
@@ -50,6 +50,11 @@ exports.deleteMoodEntry = async (req, res) => {
     const entry = await MoodEntry.findByPk(mood_id);
 
     if (!entry) return res.status(404).json({ message: "Entry not found" });
+
+    // التأكد أن صاحب التوكن هو صاحب الإدخال
+    if (entry.user_id !== req.user.user_id) {
+      return res.status(403).json({ message: "You can only delete your own entries" });
+    }
 
     await entry.destroy();
     res.status(200).json({ message: "Mood entry deleted successfully" });
