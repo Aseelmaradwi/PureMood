@@ -1,9 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const aiController = require('../controllers/aiController');
+const { evaluateMood } = require('../controllers/aiController');
+const { verifyToken } = require('../middleware/authMiddleware');
 
-// تحليل الحالة النفسية باستخدام الذكاء الاصطناعي
-router.post('/evaluate', aiController.evaluateMoodAI);
-//router.get('/test', (req, res) => res.send('AI route works!'));
+router.post('/evaluate', verifyToken, evaluateMood);
 
 module.exports = router;

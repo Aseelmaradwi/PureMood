@@ -26,6 +26,23 @@ exports.createMoodEntry = async (req, res) => {
   }
 };
 
+// 🟡 جلب كل الحالات المزاجية للمستخدم الحالي (من التوكن)
+exports.getMyMoodEntries = async (req, res) => {
+  try {
+    const user_id = req.user.user_id;
+
+    const entries = await MoodEntry.findAll({
+      where: { user_id },
+      order: [['created_at', 'DESC']]
+    });
+
+    res.status(200).json(entries);
+  } catch (error) {
+    console.error("Error fetching my mood entries:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 // 🟡 جلب كل الحالات المزاجية لمستخدم
 exports.getMoodEntriesByUser = async (req, res) => {
   try {
