@@ -6,7 +6,14 @@ const MoodAnalytics = sequelize.define('MoodAnalytics', {
   analytics_id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   user_id: { type: DataTypes.INTEGER, allowNull: false, references: { model: 'users', key: 'user_id' } },
   period_type: { type: DataTypes.ENUM('daily', 'weekly', 'monthly'), allowNull: false },
+
+  // ✅ تعديل: السماح بالقيم الفارغة مؤقتًا لتجنب مشكلة البيانات القديمة
+  start_date: { type: DataTypes.DATE, allowNull: true },
+  end_date: { type: DataTypes.DATE, allowNull: true },
+
   average_mood: { type: DataTypes.FLOAT, allowNull: true },
+  median_mood: { type: DataTypes.FLOAT, allowNull: true },
+  variance: { type: DataTypes.FLOAT, allowNull: true },
   high_days: { type: DataTypes.INTEGER, allowNull: true },
   low_days: { type: DataTypes.INTEGER, allowNull: true },
   trend: { type: DataTypes.ENUM('improving', 'declining', 'stable'), allowNull: true },

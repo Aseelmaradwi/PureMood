@@ -6,6 +6,9 @@ const { verifyToken } = require('../middleware/authMiddleware');
 // 🟢 إضافة مزاج (باستخدام التوكن)
 router.post('/add', verifyToken, moodController.createMoodEntry);
 
+// 🟡 جلب جميع المزاجات للمستخدم الحالي (من التوكن)
+router.get('/user/me', verifyToken, moodController.getMyMoodEntries);
+
 // 🟡 جلب جميع المزاجات لمستخدم محدد
 router.get('/user/:user_id', moodController.getMoodEntriesByUser);
 
