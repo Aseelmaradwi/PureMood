@@ -15,6 +15,11 @@ const analyticsRoutes = require('./routes/analyticsRoutes');
 const aiRoutes = require('./routes/aiRoutes');
 const assessmentRoutes = require('./routes/AssessmentRoutes');
 const communityRoutes = require('./routes/communityRoutes');
+// Gamification routes
+const pointsRoutes = require('./routes/points');
+const badgesRoutes = require('./routes/badges');
+const challengesRoutes = require('./routes/challenges');
+const adminRoutes = require('./routes/adminRoutes');
 
 app.use('/api/users', userRoutes);
 app.use('/api/moods', moodRoutes);
@@ -22,6 +27,11 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/assessments', assessmentRoutes);
 app.use('/api/community', communityRoutes);
+app.use('/api/points', pointsRoutes);
+app.use('/api/badges', badgesRoutes);
+app.use('/api/challenges', challengesRoutes);
+app.use('/api/admin', adminRoutes);
+
 
 const startServer = async () => {
   try {
@@ -42,8 +52,7 @@ const startServer = async () => {
     CommunityPost.hasMany(CommunityLike, { foreignKey: 'post_id' });
     
     CommunityComment.belongsTo(User, { foreignKey: 'user_id' });
-    CommunityComment.belongsTo(CommunityPost, { foreignKey: 'post_id' });
-    
+    CommunityComment.belongsTo(CommunityPost, { foreignKey: 'post_id' });    
     CommunityLike.belongsTo(User, { foreignKey: 'user_id' });
     CommunityLike.belongsTo(CommunityPost, { foreignKey: 'post_id' });
     
