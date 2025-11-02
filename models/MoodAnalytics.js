@@ -7,7 +7,6 @@ const MoodAnalytics = sequelize.define('MoodAnalytics', {
   user_id: { type: DataTypes.INTEGER, allowNull: false, references: { model: 'users', key: 'user_id' } },
   period_type: { type: DataTypes.ENUM('daily', 'weekly', 'monthly'), allowNull: false },
 
-  // ✅ تعديل: السماح بالقيم الفارغة مؤقتًا لتجنب مشكلة البيانات القديمة
   start_date: { type: DataTypes.DATE, allowNull: true },
   end_date: { type: DataTypes.DATE, allowNull: true },
 

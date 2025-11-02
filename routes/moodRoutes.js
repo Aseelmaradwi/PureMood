@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { verifyToken } = require('../middleware/authMiddleware');
 const sequelize = require('../config/db');
+const { generateRecommendations } = require('../controllers/recommendationController');
 
 // 🔥 GET /api/moods - جلب كل مزاجات المستخدم
 router.get('/', verifyToken, async (req, res) => {
@@ -53,9 +54,26 @@ router.post('/add', verifyToken, async (req, res) => {
         );
         
         console.log(`✅ تم إضافة مزاج جديد في جدول: ${tableName}، ID: ${result.insertId}`);
+        
+        // 🎯 توليد توصيات تلقائياً بناءً على المزاج
+        let recommendations = [];
+        try {
+          recommendations = await generateRecommendations(
+            req.user.user_id, 
+            mood_emoji, 
+            result.insertId
+          );
+          console.log(`✅ تم توليد ${recommendations.length} توصية للمزاج: ${mood_emoji}`);
+        } catch (recError) {
+          console.error('⚠️ خطأ في توليد التوصيات:', recError);
+          // لا نوقف العملية إذا فشل توليد التوصيات
+        }
+        
         return res.json({ 
           message: "Mood saved successfully!", 
-          mood_id: result.insertId 
+          mood_id: result.insertId,
+          recommendations_count: recommendations.length,
+          recommendations: recommendations
         });
       } catch (e) {
         console.log(`❌ فشل الإدراج في جدول ${tableName}: ${e.message}`);
