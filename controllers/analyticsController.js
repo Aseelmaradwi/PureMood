@@ -2,7 +2,6 @@ const MoodEntry = require('../models/MoodEntry');
 const MoodAnalytics = require('../models/MoodAnalytics');
 const { Op } = require('sequelize');
 
-// ✅ دالة لحساب median
 function calculateMedian(values) {
   if (!values.length) return 0;
   const sorted = [...values].sort((a, b) => a - b);
@@ -14,16 +13,13 @@ function calculateMedian(values) {
   }
 }
 
-// ✅ دالة لحساب variance
 function calculateVariance(values, mean) {
   if (!values.length) return 0;
   const sumSquaredDiffs = values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0);
   return sumSquaredDiffs / values.length;
 }
 
-// =========================
-// حساب Analytics أسبوعي
-// =========================
+
 exports.calculateWeeklyAnalytics = async (req, res) => {
   try {
     const user_id = req.user.user_id;
@@ -32,7 +28,6 @@ exports.calculateWeeklyAnalytics = async (req, res) => {
     const lastWeek = new Date();
     lastWeek.setDate(today.getDate() - 7);
 
-    // جلب MoodEntries للأسبوع الأخير
     const entries = await MoodEntry.findAll({
       where: {
         user_id,
@@ -53,14 +48,13 @@ exports.calculateWeeklyAnalytics = async (req, res) => {
       });
     }
 
-    // تحويل emojis لقيم رقمية
     const moodValues = entries.map(entry => {
       if (entry.mood_value) return entry.mood_value;
       const emojiScores = { '😄': 5, '😊': 4, '😐': 3, '😢': 2, '😔': 1 };
       return emojiScores[entry.mood_emoji] || 3;
     });
 
-    // الحسابات
+    
     const average = moodValues.reduce((a, b) => a + b, 0) / moodValues.length;
     const median = calculateMedian(moodValues);
     const variance = calculateVariance(moodValues, average);
@@ -70,7 +64,6 @@ exports.calculateWeeklyAnalytics = async (req, res) => {
     const trend = highDays > lowDays ? 'improving' :
                   lowDays > highDays ? 'declining' : 'stable';
 
-    // حفظ أو تحديث Analytics مع start_date و end_date
     const [analytics, created] = await MoodAnalytics.findOrCreate({
       where: { user_id, period_type: 'weekly' },
       defaults: {
@@ -100,7 +93,6 @@ exports.calculateWeeklyAnalytics = async (req, res) => {
       });
     }
 
-    // تحويل الـ entries لبيانات chart
     const chartData = entries.map(entry => ({
       date: entry.created_at,
       mood_emoji: entry.mood_emoji,
@@ -130,9 +122,7 @@ exports.calculateWeeklyAnalytics = async (req, res) => {
   }
 };
 
-// =========================
-// حساب Analytics يومي
-// =========================
+
 exports.calculateDailyAnalytics = async (req, res) => {
   try {
     const user_id = req.user.user_id;
@@ -141,7 +131,6 @@ exports.calculateDailyAnalytics = async (req, res) => {
     const yesterday = new Date();
     yesterday.setDate(today.getDate() - 1);
 
-    // جلب MoodEntries لليوم الأخير
     const entries = await MoodEntry.findAll({
       where: {
         user_id,
@@ -163,14 +152,12 @@ exports.calculateDailyAnalytics = async (req, res) => {
       });
     }
 
-    // تحويل emojis لقيم رقمية
     const moodValues = entries.map(entry => {
       if (entry.mood_value) return entry.mood_value;
       const emojiScores = { '😄': 5, '😊': 4, '😐': 3, '😢': 2, '😔': 1 };
       return emojiScores[entry.mood_emoji] || 3;
     });
 
-    // الحسابات
     const average = moodValues.reduce((a, b) => a + b, 0) / moodValues.length;
     const median = calculateMedian(moodValues);
     const variance = calculateVariance(moodValues, average);
@@ -180,7 +167,6 @@ exports.calculateDailyAnalytics = async (req, res) => {
     const trend = highDays > lowDays ? 'improving' :
                   lowDays > highDays ? 'declining' : 'stable';
 
-    // حفظ أو تحديث Analytics
     const [analytics, created] = await MoodAnalytics.findOrCreate({
       where: { user_id, period_type: 'daily' },
       defaults: {
@@ -210,7 +196,6 @@ exports.calculateDailyAnalytics = async (req, res) => {
       });
     }
 
-    // تحويل الـ entries لبيانات chart
     const chartData = entries.map(entry => ({
       date: entry.created_at,
       mood_emoji: entry.mood_emoji,
@@ -240,9 +225,7 @@ exports.calculateDailyAnalytics = async (req, res) => {
   }
 };
 
-// =========================
-// حساب Analytics شهري
-// =========================
+
 exports.calculateMonthlyAnalytics = async (req, res) => {
   try {
     const user_id = req.user.user_id;
@@ -251,7 +234,6 @@ exports.calculateMonthlyAnalytics = async (req, res) => {
     const lastMonth = new Date();
     lastMonth.setDate(today.getDate() - 30);
 
-    // جلب MoodEntries للشهر الأخير
     const entries = await MoodEntry.findAll({
       where: {
         user_id,
@@ -273,14 +255,12 @@ exports.calculateMonthlyAnalytics = async (req, res) => {
       });
     }
 
-    // تحويل emojis لقيم رقمية
     const moodValues = entries.map(entry => {
       if (entry.mood_value) return entry.mood_value;
       const emojiScores = { '😄': 5, '😊': 4, '😐': 3, '😢': 2, '😔': 1 };
       return emojiScores[entry.mood_emoji] || 3;
     });
 
-    // الحسابات
     const average = moodValues.reduce((a, b) => a + b, 0) / moodValues.length;
     const median = calculateMedian(moodValues);
     const variance = calculateVariance(moodValues, average);
@@ -290,7 +270,6 @@ exports.calculateMonthlyAnalytics = async (req, res) => {
     const trend = highDays > lowDays ? 'improving' :
                   lowDays > highDays ? 'declining' : 'stable';
 
-    // حفظ أو تحديث Analytics
     const [analytics, created] = await MoodAnalytics.findOrCreate({
       where: { user_id, period_type: 'monthly' },
       defaults: {
@@ -341,15 +320,12 @@ exports.calculateMonthlyAnalytics = async (req, res) => {
   }
 };
 
-// =========================
-// GET Analytics لأي فترة
-// =========================
+
 exports.getAnalytics = async (req, res) => {
   try {
     const user_id = req.user.user_id;
-    const { period } = req.params; // daily / weekly / monthly
+    const { period } = req.params; 
 
-    // حساب التواريخ حسب الفترة
     const today = new Date();
     let startDate;
     
@@ -364,7 +340,6 @@ exports.getAnalytics = async (req, res) => {
       startDate.setDate(today.getDate() - 30);
     }
 
-    // جلب البيانات من MoodEntries مباشرة
     const entries = await MoodEntry.findAll({
       where: {
         user_id,
@@ -386,14 +361,12 @@ exports.getAnalytics = async (req, res) => {
       });
     }
 
-    // تحويل emojis لقيم رقمية
     const moodValues = entries.map(entry => {
       if (entry.mood_value) return entry.mood_value;
       const emojiScores = { '😄': 5, '😊': 4, '😐': 3, '😢': 2, '😔': 1 };
       return emojiScores[entry.mood_emoji] || 3;
     });
 
-    // الحسابات
     const average = moodValues.reduce((a, b) => a + b, 0) / moodValues.length;
     const median = calculateMedian(moodValues);
     const variance = calculateVariance(moodValues, average);
@@ -403,7 +376,6 @@ exports.getAnalytics = async (req, res) => {
     const trend = highDays > lowDays ? 'improving' :
                   lowDays > highDays ? 'declining' : 'stable';
 
-    // تحويل الـ entries لبيانات chart
     const chartData = entries.map(entry => ({
       date: entry.created_at,
       mood_emoji: entry.mood_emoji,

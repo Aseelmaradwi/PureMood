@@ -18,7 +18,6 @@ const MoodEntry = sequelize.define('MoodEntry', {
   timestamps: false 
 });
 
-// العلاقة بين المستخدم والمزاج
 MoodEntry.belongsTo(User, { foreignKey: 'user_id' });
 User.hasMany(MoodEntry, { foreignKey: 'user_id' });
 
