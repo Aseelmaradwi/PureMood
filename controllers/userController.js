@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const { createNotification } = require('./notificationController');
 
 // تسجيل مستخدم جديد
 const register = async (req, res) => {
@@ -24,6 +25,14 @@ const register = async (req, res) => {
     let message = "User registered successfully";
     if (status === 'pending') {
       message = "Registration successful! Your account is pending admin approval.";
+      
+      // 🔔 إرسال إشعار للأدمن
+      await createNotification(
+        'new_user_pending',
+        `طلب تسجيل ${role === 'admin' ? 'أدمن' : 'أخصائي'} جديد`,
+        `${name} (${email}) يطلب التسجيل كـ ${role === 'admin' ? 'أدمن' : 'أخصائي'} ويحتاج موافقتك`,
+        { user_id: user.user_id, name, email, role }
+      );
     }
 
     res.status(201).json({ message, user_id: user.user_id, status });

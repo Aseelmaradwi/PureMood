@@ -5,6 +5,7 @@ const CommunityComment = require('../models/CommunityComment');
 const AssessmentResult = require('../models/AssessmentResult');
 const { Op } = require('sequelize');
 const sequelize = require('../config/db');
+const { createNotification } = require('./notificationController');
 
 // 📊 إحصائيات Dashboard
 const getDashboardStats = async (req, res) => {
@@ -176,13 +177,28 @@ const getAllPostsAdmin = async (req, res) => {
 const deletePostAdmin = async (req, res) => {
   try {
     const { postId } = req.params;
-    const post = await CommunityPost.findOne({ where: { post_id: postId } });
+    const post = await CommunityPost.findOne({ 
+      where: { post_id: postId },
+      include: [{ model: User, attributes: ['name'] }]
+    });
     
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
     }
 
+    const postTitle = post.title;
+    const userName = post.User ? post.User.name : 'Unknown';
+    
     await post.destroy();
+
+    // 🔔 إشعار للأدمن الآخرين بحذف المنشور
+    await createNotification(
+      'post_deleted',
+      'تم حذف منشور',
+      `تم حذف منشور "${postTitle}" للمستخدم ${userName}`,
+      { post_id: postId, title: postTitle, deleted_by: req.user.user_id }
+    );
+
     res.json({ message: 'Post deleted successfully' });
   } catch (err) {
     res.status(500).json({ message: err.message });

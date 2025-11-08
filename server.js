@@ -18,6 +18,7 @@ const communityRoutes = require('./routes/communityRoutes');
 const recommendationRoutes = require('./routes/recommendationRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const emailVerificationRoutes = require('./routes/emailVerificationRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 // Gamification routes
 const pointsRoutes = require('./routes/points');
 const badgesRoutes = require('./routes/badges');
@@ -32,6 +33,7 @@ app.use('/api/community', communityRoutes);
 app.use('/api/recommendations', recommendationRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/email', emailVerificationRoutes);
+app.use('/api/notifications', notificationRoutes);
 app.use('/api/points', pointsRoutes);
 app.use('/api/badges', badgesRoutes);
 app.use('/api/challenges', challengesRoutes);
@@ -60,15 +62,35 @@ const startServer = async () => {
     console.log('🔄 Starting server...');
     await sequelize.authenticate();
     console.log('✅ Database connected');
+
+    // 🧹 تنظيف الإشعارات القديمة عند بدء السيرفر
+    const { cleanupOldNotifications, deleteVeryOldNotifications } = require('./controllers/notificationController');
+    
+    // تنظيف فوري عند البدء
+    setTimeout(() => {
+      cleanupOldNotifications();
+      deleteVeryOldNotifications();
+    }, 5000);
+
+    // ⚠️ تنظيف تلقائي كل دقيقة (للاختبار فقط - غيرها ل 24 ساعة في الإنتاج)
+    setInterval(() => {
+      cleanupOldNotifications();
+      deleteVeryOldNotifications();
+    }, 1 * 60 * 1000); // كل دقيقة للاختبار
+    // }, 24 * 60 * 60 * 1000); // كل يوم للإنتاج
+    
+    console.log('✅ Notification cleanup scheduler started (running every 1 minute for testing)');
     
     const User = require('./models/User');
     const CommunityPost = require('./models/CommunityPost');
     const CommunityComment = require('./models/CommunityComment');
     const CommunityLike = require('./models/CommunityLike');
+    const Notification = require('./models/Notification');
     
     User.hasMany(CommunityPost, { foreignKey: 'user_id' });
     User.hasMany(CommunityComment, { foreignKey: 'user_id' });
     User.hasMany(CommunityLike, { foreignKey: 'user_id' });
+    User.hasMany(Notification, { foreignKey: 'admin_id' });
     
     CommunityPost.belongsTo(User, { foreignKey: 'user_id' });
     CommunityPost.hasMany(CommunityComment, { foreignKey: 'post_id' });
@@ -79,6 +101,8 @@ const startServer = async () => {
     
     CommunityLike.belongsTo(User, { foreignKey: 'user_id' });
     CommunityLike.belongsTo(CommunityPost, { foreignKey: 'post_id' });
+    
+    Notification.belongsTo(User, { foreignKey: 'admin_id' });
     
     try {
       await sequelize.query(`

@@ -3,6 +3,7 @@ const CommunityComment = require('../models/CommunityComment');
 const CommunityLike = require('../models/CommunityLike');
 const User = require('../models/User');
 const { Op } = require('sequelize');
+const { createNotification } = require('./notificationController');
 
 exports.getAllPosts = async (req, res) => {
   try {
@@ -56,6 +57,15 @@ exports.createPost = async (req, res) => {
       category: category || 'general',
       is_anonymous: is_anonymous || false
     });
+
+    // 🔔 إرسال إشعار للأدمن عن المنشور الجديد
+    const user = await User.findByPk(user_id);
+    await createNotification(
+      'new_post',
+      'منشور جديد في المجتمع',
+      `${is_anonymous ? 'مستخدم مجهول' : user.name} نشر منشور جديد بعنوان: ${title}`,
+      { post_id: post.post_id, user_id, title, category, is_anonymous }
+    );
 
     res.status(201).json({ 
       message: 'Post created successfully',
